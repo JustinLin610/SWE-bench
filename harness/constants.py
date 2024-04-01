@@ -2,7 +2,7 @@ MAP_VERSION_TO_INSTALL_SKLEARN = {
     k: {
         "python": "3.6",
         "packages": "numpy scipy cython pytest pandas matplotlib",
-        "install": "pip install -v --no-use-pep517 --no-build-isolation -e .",
+        "install": "python setup.py develop",
     }
     for k in ["0.20", "0.21", "0.22"]
 }
@@ -11,7 +11,7 @@ MAP_VERSION_TO_INSTALL_SKLEARN.update(
         k: {
             "python": "3.7",
             "packages": "numpy scipy cython pytest pandas matplotlib",
-            "install": "pip install -v --no-use-pep517 --no-build-isolation -e .",
+            "install": "python setup.py develop",
         }
         for k in ["0.23", "0.24"]
     }
@@ -165,7 +165,6 @@ MAP_VERSION_TO_INSTALL_MATPLOTLIB = {
         "python": "3.9",
         "packages": "environment.yml",
         "install": "python -m pip install -e .",
-        "pip_packages": "pytest",
     }
     for k in ["3.5", "3.6", "3.7"]
 }
@@ -175,7 +174,6 @@ MAP_VERSION_TO_INSTALL_MATPLOTLIB.update(
             "python": "3.8",
             "packages": "requirements.txt",
             "install": "python -m pip install -e .",
-            "pip_packages": "pytest"
         }
         for k in ["3.1", "3.2", "3.3", "3.4"]
     }
@@ -186,7 +184,6 @@ MAP_VERSION_TO_INSTALL_MATPLOTLIB.update(
             "python": "3.7",
             "packages": "requirements.txt",
             "install": "python -m pip install -e .",
-            "pip_packages": "pytest",
         }
         for k in ["3.0"]
     }
@@ -196,7 +193,6 @@ MAP_VERSION_TO_INSTALL_MATPLOTLIB.update(
         k: {
             "python": "3.5",
             "install": "python setup.py build; python setup.py install",
-            "pip_packages": "pytest",
         }
         for k in ["2.0", "2.1", "2.2", "1.0", "1.1", "1.2", "1.3", "1.4", "1.5"]
     }
@@ -219,7 +215,11 @@ for k in ["3.0", "3.1", "3.2", "3.3", "3.4", "3.5", "4.0"]:
     ].append("sed -i 's/Jinja2>=2.3/Jinja2<3.1/' setup.py")
 
 MAP_VERSION_TO_INSTALL_ASTROPY = {
-    k: {"python": "3.9", "install": "pip install -e .[test]"}
+    k: {
+        "python": "3.9", 
+        "install": "python setup.py install",
+        "pip_packages": "pytest extension-helpers numpy",
+        }
     for k in
         ["0.1", "0.2", "0.3", "0.4", "1.1", "1.2", "1.3", "3.0", "3.1", "3.2"] + \
         ["4.1", "4.2", "4.3", "5.0", "5.1", "5.2"]

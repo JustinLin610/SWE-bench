@@ -1,6 +1,4 @@
 import logging, os, platform, subprocess
-import os.path
-import shutil
 
 from constants import (
     APPLY_PATCH_FAIL,
@@ -198,17 +196,13 @@ class TestbedContextManager:
                     cmd_line_install_link = "https://repo.anaconda.com/miniconda/Miniconda3-py311_23.11.0-2-Linux-aarch64.sh"
             else:
                 raise ValueError("Unknown computer platform " + platform.system())
-            
-            temp_miniconda_sh = f"{os.getcwd()}/miniconda.sh"
-            if not os.path.exists(temp_miniconda_sh):
-                download_cmd = [
-                    "wget",
-                    cmd_line_install_link,
-                    "-O",
-                    temp_miniconda_sh,
-                ]
-                self.exec(download_cmd)
-            shutil.copy(temp_miniconda_sh, miniconda_sh)
+            download_cmd = [
+                "wget",
+                cmd_line_install_link,
+                "-O",
+                miniconda_sh,
+            ]
+            self.exec(download_cmd)
 
             # Install Miniconda
             install_cmd = ["bash", miniconda_sh, "-b", "-u", "-p", self.path_conda]
@@ -290,7 +284,7 @@ class TestbedContextManager:
 
                     # Install dependencies
                     path_to_reqs = get_requirements(setup_ref_instance, self.testbed)
-                    cmd = f". {path_activate} {env_name} && echo 'activate successful' && pip install -r {path_to_reqs}"
+                    cmd = f"source {path_activate} {env_name} && echo 'activate successful' && pip install -r {path_to_reqs}"
                     logger_testbed.info(
                         f"[Testbed] Installing dependencies for {env_name}; Command: {cmd}"
                     )
@@ -327,15 +321,26 @@ class TestbedContextManager:
                     os.remove(path_to_reqs)
                 else:
                     # Create environment + install dependencies
-                    cmd = f"{exec_cmd} create -n {env_name} python={install['python']} {pkgs} -y"
+                    cmd = f"{exec_cmd} create -n {env_name} python={install['python']} -y"
                     logger_testbed.info(
                         f"[Testbed] Creating environment {env_name}; Command: {cmd}"
                     )
                     self.exec(cmd.split(" "))
 
+                    # Activate the environment and install the packages
+                    activate_cmd = f". {path_activate} {env_name}"
+                    full_cmd = f"{activate_cmd} && echo 'activate successful'"
+                    if pkgs != "":
+                        install_cmd = f"pip install {pkgs}"
+                        full_cmd += f" && {install_cmd}"
+                    logger_testbed.info(
+                        f"[Testbed] Installing environment dependencies {pkgs}; Command: {full_cmd}"
+                    )
+                    self.exec(full_cmd, shell=True)
+
                 # Install additional packages if specified
                 if "pip_packages" in install:
-                    cmd = f". {path_activate} {env_name} && pip install {install['pip_packages']}"
+                    cmd = f"source {path_activate} {env_name} && pip install {install['pip_packages']}"
                     logger_testbed.info(
                         f"[Testbed] Installing pip packages for {env_name}; Command: {cmd}"
                     )
@@ -445,7 +450,10 @@ class TaskEnvContextManager:
             )
         self.log_file = os.path.join(log_dir, log_file_name)
 
-        self.cmd_activate = f". {os.path.join(self.conda_path, 'bin', 'activate')} {self.venv} && echo 'activate successful'"
+        self.cmd_activate = (
+            f"source {os.path.join(self.conda_path, 'bin', 'activate')} "
+            + f"{self.venv} && echo 'activate successful'"
+        )
         self.timeout = timeout
 
         shellenv = os.environ.copy()
